@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "material-ui": "^0.19.4",
-    "react": "^16.2.0",
-    "react-dom": "^16.2.0",
-    "react-scripts": "1.0.17"
+    "jss": "^8.1.0",
+    "jss-preset-default": "^3.0.0",
+    "material-ui": "next",
+    "prop-types": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-jss": "latest",
+    "react-scripts": "latest",
+    "recompose": "latest"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,8 +1,10 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import registerServiceWorker from './registerServiceWorker';
+// @flow
 
-ReactDOM.render(<App />, document.getElementById('root'));
-registerServiceWorker();
+import React from 'react';
+import { render } from 'react-dom';
+import Index from './pages/index';
+
+const rootElement = document.querySelector('#root');
+if (rootElement) {
+  render(<Index />, rootElement);
+}
