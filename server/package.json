@@ -20,5 +20,8 @@
   "dependencies": {
     "express": "^4.16.2",
     "hdb": "^0.15.1"
+  },
+  "devDependencies": {
+    "cors": "^2.8.4"
   }
 }
