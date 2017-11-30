@@ -1,0 +1,24 @@
+{
+  "name": "tuk2-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/friedow/tuk2-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/friedow/tuk2-backend/issues"
+  },
+  "homepage": "https://github.com/friedow/tuk2-backend#readme",
+  "dependencies": {
+    "express": "^4.16.2",
+    "hdb": "^0.15.1"
+  }
+}
