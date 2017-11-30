@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "highcharts": "^6.0.3",
     "jss": "^8.1.0",
     "jss-preset-default": "^3.0.0",
     "material-ui": "next",
     "prop-types": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "react-highcharts": "^15.0.0",
     "react-jss": "latest",
     "react-scripts": "latest",
     "recompose": "latest"
