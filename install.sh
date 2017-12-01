@@ -1,5 +1,5 @@
 cd server
 npm install
-cd ../client
+cd ../material-app
 npm install
 read -p "Press enter to continue"
