@@ -57,12 +57,15 @@ class InteractiveMap extends PureComponent {
 
   setEntity(event, key, value) {
     this.setState({entity: value});
+    this.getData();
   }
   setYear(event, value) {
     this.setState({year: value * 1});
+    this.getData();
   }
   setGender(event, key, value) {
     this.setState({gender: value});
+    this.getData();
   }
 
   getData() {
@@ -76,6 +79,7 @@ class InteractiveMap extends PureComponent {
 
   componentDidMount() {
     this.enterAnimationTimer = setTimeout(this.setViewEnters, 500);
+    this.getData();
   }
 
   componentWillUnmount() {
@@ -101,6 +105,10 @@ class InteractiveMap extends PureComponent {
             <ToolbarGroup firstChild={true}>
               <DropDownMenu value={this.state.entity} onChange={this.setEntity.bind(this)}>
                 <MenuItem value={'patients-count'} primaryText="Count of patients" />
+                <MenuItem value={'visits-count'} primaryText="Count of visits" />
+                <MenuItem value={'patients-relative'} primaryText="Patients per 1 Mio" />
+                <MenuItem value={'visits-relative'} primaryText="Visits per 1 Mio" />
+                <MenuItem value={'average-bmi'} primaryText="Average BMI" />
               </DropDownMenu>
             </ToolbarGroup>
             <ToolbarGroup>

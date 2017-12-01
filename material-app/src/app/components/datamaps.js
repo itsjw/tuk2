@@ -24,7 +24,7 @@ export default class DataMap extends React.Component {
     return objectAssign({}, statesDefaults, newData);
   }
   renderMap(){
-    return new Datamap({
+    let map = new Datamap({
       element: ReactDOM.findDOMNode(this),
       scope: 'usa',
       height: 700,
@@ -42,6 +42,8 @@ export default class DataMap extends React.Component {
         }
       }
     });
+    map.labels();
+    return map;
   }
   currentScreenWidth(){
     return window.innerWidth ||
