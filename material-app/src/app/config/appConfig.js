@@ -13,7 +13,8 @@ export const appConfig = {
   DRAWER: {
     menus: [
       {id: 1, title: 'Home', routeName: '/'},
-      {id: 2, title: 'InteractiveMap', routeName: '/map/patients-count/all/all'}
+      {id: 2, title: 'InteractiveMap', routeName: '/map/patients-count/all/all'},
+      {id: 3, title: 'Task 2', routeName: '/task-two'}
     ]
   }
 
