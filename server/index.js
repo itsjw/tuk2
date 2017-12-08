@@ -65,75 +65,34 @@ app.get('/most-common-diseases-by-year-of-birth', function (req, res) {
             return console.error('Connect error', err);
         }
         const query = `
-            SELECT 
-                COUNT(*) AS "Number of Diagnosis", 
-                "DIA"."DiagnosisDescription", 
-                "PATIENT"."YearOfBirth",
-                "DATACOUNT"."Count per Year"
-            FROM 
-                "DIAGNOSIS" AS "DIA"
-                INNER JOIN (
-                    SELECT
-                        TOP 10
-                        COUNT(*) AS "Number of Diagnosis", 
-                        "D"."DiagnosisDescription" 
-                    FROM 
-                        "DIAGNOSIS" AS "D"
-                    GROUP BY 
-                        "D"."DiagnosisDescription"
-                    ORDER BY 
-                        "Number of Diagnosis" DESC
-                ) AS "TOPDIAGNOSIS"
-                    ON "TOPDIAGNOSIS"."DiagnosisDescription" = "DIA"."DiagnosisDescription"
-                INNER JOIN "PATIENT"
-                    ON "PATIENT"."PatientGuid" = "DIA"."PatientGuid"
-                INNER JOIN (
-                    SELECT 
-                        COUNT(*) AS "Count per Year",
-                        "YearOfBirth"
-                    FROM (
-                        SELECT 
-                            COUNT(*) AS "Number of Diagnosis", 
-                            "DIA"."DiagnosisDescription", 
-                            "YearOfBirth" 
-                        FROM 
-                            "DIAGNOSIS" AS "DIA"
-                            INNER JOIN (
-                                SELECT
-                                    TOP 10
-                                    COUNT(*) AS "Number of Diagnosis", 
-                                    "D"."DiagnosisDescription" 
-                                FROM 
-                                    "DIAGNOSIS" AS "D"
-                                GROUP BY 
-                                    "D"."DiagnosisDescription"
-                                ORDER BY 
-                                    "Number of Diagnosis" DESC
-                            ) AS "TOPDIAGNOSIS"
-                                ON "TOPDIAGNOSIS"."DiagnosisDescription" = "DIA"."DiagnosisDescription"
-                            INNER JOIN "PATIENT"
-                                ON "PATIENT"."PatientGuid" = "DIA"."PatientGuid"
-                        GROUP BY 
-                            "YearOfBirth", 
-                            "DIA"."DiagnosisDescription" 
-                        ORDER BY 
-                            "YearOfBirth" DESC
-                    )
-                    GROUP BY 
-                        "YearOfBirth"
-                    ORDER BY 
-                        "YearOfBirth" DESC
-                ) AS "DATACOUNT"
-                    ON "DATACOUNT"."YearOfBirth" = "PATIENT"."YearOfBirth"
-            WHERE
-                "Count per Year" = 10
-            GROUP BY 
-                "PATIENT"."YearOfBirth", 
-                "DIA"."DiagnosisDescription" ,
-                "DATACOUNT"."Count per Year"
-            ORDER BY 
-                "DIA"."DiagnosisDescription",
-                "PATIENT"."YearOfBirth";
+            WITH TOPDIAGNOSES AS (
+                SELECT TOP 10 "DIAGNOSIS"."DiagnosisDescription"
+                FROM "DIAGNOSIS"
+                GROUP BY "DIAGNOSIS"."DiagnosisDescription"
+                ORDER BY COUNT(*) DESC
+            ),
+            PATIENTDIAGNOSES AS (
+                SELECT DIAGNOSIS."DiagnosisDescription", PATIENT."YearOfBirth", COUNT(*) AS "Count"
+                FROM DIAGNOSIS
+                JOIN PATIENT ON PATIENT."PatientGuid" = DIAGNOSIS."PatientGuid"
+                GROUP BY  DIAGNOSIS."DiagnosisDescription", PATIENT."YearOfBirth"
+                ORDER BY COUNT(*) DESC
+            ),
+            YEARSOFBIRTH AS (
+                SELECT DISTINCT "YearOfBirth"
+                FROM PATIENT
+            ),
+            TOPDIAGNOSESPERYEAR AS (
+                SELECT TOPDIAGNOSES."DiagnosisDescription", YEARSOFBIRTH."YearOfBirth", "Count" 
+                FROM TOPDIAGNOSES
+                CROSS JOIN YEARSOFBIRTH
+                LEFT JOIN PATIENTDIAGNOSES 
+                    ON TOPDIAGNOSES."DiagnosisDescription" = PATIENTDIAGNOSES."DiagnosisDescription" 
+                    AND PATIENTDIAGNOSES."YearOfBirth" = YEARSOFBIRTH."YearOfBirth"
+            )
+            SELECT  "YearOfBirth", "DiagnosisDescription", COALESCE("Count", 0) AS "Count"
+            FROM TOPDIAGNOSESPERYEAR
+            ORDER BY "YearOfBirth", "DiagnosisDescription"
         `
         client.exec(query, function (err, rows) {
             client.end();
@@ -141,33 +100,15 @@ app.get('/most-common-diseases-by-year-of-birth', function (req, res) {
                 res.status(500).send('Hana query failed ' + err);
                 return console.error('Execute error:', err);
             }
-            // Preformat the data for the charting library
-            let categories = [];
-            let series = [];
+            let result = {};
             rows.forEach(element => {
-                const currentYear = categories.find(category => {
-                    return category == element["YearOfBirth"];
-                });
-                if(!currentYear) {
-                    categories.push(element["YearOfBirth"]);
-                }
+                let year = element["YearOfBirth"];
+                let diagnosis = element["DiagnosisDescription"];
                 
-                const currentSeries = series.find(a => {
-                    return a["name"] == element["DiagnosisDescription"];
-                });
-                if(currentSeries) {
-                    currentSeries.data.push(element["Number of Diagnosis"]);
-                } else {
-                    series.push({
-                        name: element["DiagnosisDescription"],
-                        data: [element["Number of Diagnosis"]]
-                    });
-                }
+                if(result[diagnosis] === undefined) { result[diagnosis] = {}; }
+                result[diagnosis][year] =  element["Count"];
             });
-            res.send({
-                categories: categories,
-                series: series
-            });
+            res.send(result);
         });
     });
 });

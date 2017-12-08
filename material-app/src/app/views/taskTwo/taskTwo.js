@@ -11,8 +11,10 @@ import {
   CardTitle,
   CardText
 }                         from 'material-ui/Card';
-import FlatButton         from 'material-ui/FlatButton';
-import {getMostCommonDiseasesByYearOfBirth}           from '../../services/API/commonDiseases';
+import {
+  getMostCommonDiseasesByYearOfBirth
+}                         from '../../services/API/commonDiseases';
+
 var Highcharts = require('highcharts');
 require('highcharts/modules/exporting')(Highcharts);
   
@@ -34,8 +36,6 @@ require('highcharts/modules/exporting')(Highcharts);
     state = {
       animated: true,
       viewEnters: false,
-      categories: [],
-      series: []
     };
   
     componentDidMount() {
@@ -50,28 +50,40 @@ require('highcharts/modules/exporting')(Highcharts);
   
     getData() {
       getMostCommonDiseasesByYearOfBirth()
-        .then((data) => {
-          console.log(data.data);
-          this.setState({series: data.data.series});
-          this.setState({categories: data.data.categories});
-          console.log(this.state.series);
-          console.log(this.state.categories);
+        .then((resp) => {
+          let series = Object.keys(resp.data).map((disease) => ({
+            name: disease,
+            data: Object.values(resp.data[disease])
+          }));
+          let categories = [];
+          if(series.length > 0) {
+            categories = Object.keys(resp.data[series[0].name]); //all ears of birth
+          }
+          
+          //don't need to save it in a state
+          //this.setState({series: resp.data.series, categories: resp.data.categories});
+
           Highcharts.chart('highchart', { 
             chart: {
-                type: 'line'
+                type: 'line',
             },
             title: {
-                text: 'Fruit Consumption'
+                text: 'Most Common Diseases by Year of Birth'
             },
             xAxis: {
-                categories: this.state.categories
+                categories: categories
             },
             yAxis: {
                 title: {
-                    text: 'Fruit eaten'
+                    text: 'Count'
                 }
             },
-            series: this.state.series
+            series: series,
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
            });
         });
     }
@@ -90,14 +102,14 @@ require('highcharts/modules/exporting')(Highcharts);
               'view-enter':    viewEnters
             })
           }>
-          <div className="row">
-            <div className="col-md-8 col-md-offset-2">
-              <div className="box">
-                <h1>Test</h1>
-                <div id="highchart" className="highchart"></div>
-              </div>
-            </div>
-          </div>
+          <Card style={{margin:20}}>
+            <CardTitle
+              title="10 Most Common Diseases"
+            />
+            <CardText>
+              <div id="highchart" className="highchart"></div>
+            </CardText>
+          </Card>
         </section>
       );
     }

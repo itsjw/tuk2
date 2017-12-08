@@ -14,7 +14,7 @@ export const appConfig = {
     menus: [
       {id: 1, title: 'Home', routeName: '/'},
       {id: 2, title: 'InteractiveMap', routeName: '/map/patients-count/all/all'},
-      {id: 3, title: 'Task 2', routeName: '/task-two'}
+      {id: 3, title: 'Most Common Diseases', routeName: '/task-two'}
     ]
   }
 

@@ -86,7 +86,9 @@ class App extends Component {
             </IconMenu>
           }
         />
-        <MainRoutes />
+        <div style={drawerOpened?{marginLeft:264}:{}}>
+          <MainRoutes />
+        </div>
       </div>
     );
   }
