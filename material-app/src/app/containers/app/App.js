@@ -16,6 +16,7 @@ import {
 }                           from 'material-ui/styles/colors';
 import MainRoutes           from '../../routes/MainRoutes';
 import { withRouter }       from 'react-router';
+import './app.style.scss';
 
 class App extends Component {
   static propTypes = {
@@ -61,6 +62,7 @@ class App extends Component {
           }
         </Drawer>
         <AppBar
+          style={{position: 'fixed', top: 0}}
           title={appName}
           onLeftIconButtonTouchTap={this.handlesOnLeftIconButtonTouchTap}
           iconElementRight={
@@ -86,7 +88,7 @@ class App extends Component {
             </IconMenu>
           }
         />
-        <div style={drawerOpened?{marginLeft:264}:{}}>
+        <div className="viewBox" style={drawerOpened?{marginLeft:256}:{}}>
           <MainRoutes />
         </div>
       </div>

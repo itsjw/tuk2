@@ -7,6 +7,23 @@ var app = express();
 app.use(cors())
 
 var client = hdb.createClient(config.hana);
+function connect() {
+    client.connect(function (err) {
+        if (err) {
+            return console.error('Connect error', err);
+        } else {
+            console.log("Connected to HANA");
+        }
+    });
+}
+connect();
+
+app.use(function (req, res, next) {
+  if(client.readyState !== "connected") {
+    connect();
+  }
+  next();
+});
 
 
 app.get('/', function (req, res) {
@@ -14,132 +31,140 @@ app.get('/', function (req, res) {
 });
 
 app.get('/KPI/:entity', function (req, res) {
-    client.connect(function (err) {
-        if (err) {
-            return console.error('Connect error', err);
-        }
-        //generate filter where clause
-        let where = "";
-        where += req.query.year > 1500 ? ` AND "YearOfBirth" = ${req.query.year}` : "";
-        where += req.query.gender == 'M' || req.query.gender == 'F' ? ` AND "Gender" = '${req.query.gender}'` : "";
-        
-        queries = {
-            'patients-count': `SELECT COUNT(*) AS "value", "State" AS "code" FROM PATIENT WHERE 1=1 ${where} GROUP BY "State"`,
-            'visits-count': `SELECT COUNT(*) AS "value", "State" AS "code"
-                            FROM PATIENT 
-                            JOIN TRANSCRIPT ON PATIENT."PatientGuid" = TRANSCRIPT."PatientGuid" 
-                            WHERE 1 = 1 ${where}
-                            GROUP BY "State"`,
-            'patients-relative': `SELECT PATIENTCOUNTS.PATIENTCOUNT / STATES."Population" * 1000 * 1000 AS "value", PATIENTCOUNTS.STATE as "code", STATES."State" as "state" FROM 
-                                    (SELECT COUNT(*) AS PATIENTCOUNT, PATIENT."State" AS STATE FROM PATIENT 
-                                    WHERE 1 = 1 ${where} 
-                                    GROUP BY PATIENT."State") PATIENTCOUNTS
-                                JOIN STATES ON STATES."Code" = PATIENTCOUNTS.STATE`,
-            'visits-relative': `SELECT VISITCOUNTS.VISITCOUNT / STATES."Population" * 1000 * 1000 AS "value", VISITCOUNTS.STATE as "code", STATES."State" as "state" FROM 
-                                    (SELECT COUNT(*) AS VISITCOUNT, PATIENT."State" AS STATE FROM PATIENT 
-                                    JOIN TRANSCRIPT ON PATIENT."PatientGuid" = TRANSCRIPT."PatientGuid" 
-                                    WHERE 1 = 1 ${where} 
-                                    GROUP BY PATIENT."State") VISITCOUNTS
-                                JOIN STATES ON STATES."Code" = VISITCOUNTS.STATE`,      
-            'average-bmi': `SELECT AVG(BMI) AS "value", PATIENT."State" AS "code" FROM PATIENT 
-                            JOIN TRANSCRIPT ON PATIENT."PatientGuid" = TRANSCRIPT."PatientGuid" 
-                            WHERE BMI <> 0 ${where}
-                            GROUP BY PATIENT."State"`,                        
+    //generate filter where clause
+    let where = "";
+    where += req.query.year > 1500 ? ` AND "YearOfBirth" = ${req.query.year}` : "";
+    where += req.query.gender == 'M' || req.query.gender == 'F' ? ` AND "Gender" = '${req.query.gender}'` : "";
+    
+    queries = {
+        'patients-count': `SELECT COUNT(*) AS "value", "State" AS "code" FROM PATIENT WHERE 1=1 ${where} GROUP BY "State"`,
+        'visits-count': `SELECT COUNT(*) AS "value", "State" AS "code"
+                        FROM PATIENT 
+                        JOIN TRANSCRIPT ON PATIENT."PatientGuid" = TRANSCRIPT."PatientGuid" 
+                        WHERE 1 = 1 ${where}
+                        GROUP BY "State"`,
+        'patients-relative': `SELECT PATIENTCOUNTS.PATIENTCOUNT / STATES."Population" * 1000 * 1000 AS "value", PATIENTCOUNTS.STATE as "code", STATES."State" as "state" FROM 
+                                (SELECT COUNT(*) AS PATIENTCOUNT, PATIENT."State" AS STATE FROM PATIENT 
+                                WHERE 1 = 1 ${where} 
+                                GROUP BY PATIENT."State") PATIENTCOUNTS
+                            JOIN STATES ON STATES."Code" = PATIENTCOUNTS.STATE`,
+        'visits-relative': `SELECT VISITCOUNTS.VISITCOUNT / STATES."Population" * 1000 * 1000 AS "value", VISITCOUNTS.STATE as "code", STATES."State" as "state" FROM 
+                                (SELECT COUNT(*) AS VISITCOUNT, PATIENT."State" AS STATE FROM PATIENT 
+                                JOIN TRANSCRIPT ON PATIENT."PatientGuid" = TRANSCRIPT."PatientGuid" 
+                                WHERE 1 = 1 ${where} 
+                                GROUP BY PATIENT."State") VISITCOUNTS
+                            JOIN STATES ON STATES."Code" = VISITCOUNTS.STATE`,      
+        'average-bmi': `SELECT AVG(BMI) AS "value", PATIENT."State" AS "code" FROM PATIENT 
+                        JOIN TRANSCRIPT ON PATIENT."PatientGuid" = TRANSCRIPT."PatientGuid" 
+                        WHERE BMI <> 0 ${where}
+                        GROUP BY PATIENT."State"`,                        
 
-        };
-        console.log(queries[req.params.entity]);
-        client.exec(queries[req.params.entity], function (err, rows) {
-            client.end();
-            if (err) {
-                res.status(500).send('Hana query failed ' + err);
-                return console.error('Execute error:', err);
-            }
-            res.send(rows);
-        });
+    };
+    console.log(queries[req.params.entity]);
+    client.exec(queries[req.params.entity], function (err, rows) {
+        if (err) {
+            res.status(500).send('Hana query failed ' + err);
+            return console.error('Execute error:', err);
+        }
+        res.send(rows);
     });
 });
 
 app.get('/most-common-diseases-by-year-of-birth', function (req, res) {
-    client.connect(function (err) {
+    const query = `
+        WITH TOPDIAGNOSES AS (
+            SELECT TOP 10 "DIAGNOSIS"."DiagnosisDescription"
+            FROM "DIAGNOSIS"
+            GROUP BY "DIAGNOSIS"."DiagnosisDescription"
+            ORDER BY COUNT(*) DESC
+        ),
+        PATIENTDIAGNOSES AS (
+            SELECT DIAGNOSIS."DiagnosisDescription", PATIENT."YearOfBirth", COUNT(*) AS "Count"
+            FROM DIAGNOSIS
+            JOIN PATIENT ON PATIENT."PatientGuid" = DIAGNOSIS."PatientGuid"
+            GROUP BY  DIAGNOSIS."DiagnosisDescription", PATIENT."YearOfBirth"
+            ORDER BY COUNT(*) DESC
+        ),
+        YEARSOFBIRTH AS (
+            SELECT DISTINCT "YearOfBirth"
+            FROM PATIENT
+        ),
+        TOPDIAGNOSESPERYEAR AS (
+            SELECT TOPDIAGNOSES."DiagnosisDescription", YEARSOFBIRTH."YearOfBirth", "Count" 
+            FROM TOPDIAGNOSES
+            CROSS JOIN YEARSOFBIRTH
+            LEFT JOIN PATIENTDIAGNOSES 
+                ON TOPDIAGNOSES."DiagnosisDescription" = PATIENTDIAGNOSES."DiagnosisDescription" 
+                AND PATIENTDIAGNOSES."YearOfBirth" = YEARSOFBIRTH."YearOfBirth"
+        )
+        SELECT  "YearOfBirth", "DiagnosisDescription", COALESCE("Count", 0) AS "Count"
+        FROM TOPDIAGNOSESPERYEAR
+        ORDER BY "YearOfBirth", "DiagnosisDescription"
+    `
+    client.exec(query, function (err, rows) {
         if (err) {
-            return console.error('Connect error', err);
+            res.status(500).send('Hana query failed ' + err);
+            return console.error('Execute error:', err);
         }
-        const query = `
-            WITH TOPDIAGNOSES AS (
-                SELECT TOP 10 "DIAGNOSIS"."DiagnosisDescription"
-                FROM "DIAGNOSIS"
-                GROUP BY "DIAGNOSIS"."DiagnosisDescription"
-                ORDER BY COUNT(*) DESC
-            ),
-            PATIENTDIAGNOSES AS (
-                SELECT DIAGNOSIS."DiagnosisDescription", PATIENT."YearOfBirth", COUNT(*) AS "Count"
-                FROM DIAGNOSIS
-                JOIN PATIENT ON PATIENT."PatientGuid" = DIAGNOSIS."PatientGuid"
-                GROUP BY  DIAGNOSIS."DiagnosisDescription", PATIENT."YearOfBirth"
-                ORDER BY COUNT(*) DESC
-            ),
-            YEARSOFBIRTH AS (
-                SELECT DISTINCT "YearOfBirth"
-                FROM PATIENT
-            ),
-            TOPDIAGNOSESPERYEAR AS (
-                SELECT TOPDIAGNOSES."DiagnosisDescription", YEARSOFBIRTH."YearOfBirth", "Count" 
-                FROM TOPDIAGNOSES
-                CROSS JOIN YEARSOFBIRTH
-                LEFT JOIN PATIENTDIAGNOSES 
-                    ON TOPDIAGNOSES."DiagnosisDescription" = PATIENTDIAGNOSES."DiagnosisDescription" 
-                    AND PATIENTDIAGNOSES."YearOfBirth" = YEARSOFBIRTH."YearOfBirth"
-            )
-            SELECT  "YearOfBirth", "DiagnosisDescription", COALESCE("Count", 0) AS "Count"
-            FROM TOPDIAGNOSESPERYEAR
-            ORDER BY "YearOfBirth", "DiagnosisDescription"
-        `
-        client.exec(query, function (err, rows) {
-            client.end();
-            if (err) {
-                res.status(500).send('Hana query failed ' + err);
-                return console.error('Execute error:', err);
-            }
-            let result = {};
-            rows.forEach(element => {
-                let year = element["YearOfBirth"];
-                let diagnosis = element["DiagnosisDescription"];
-                
-                if(result[diagnosis] === undefined) { result[diagnosis] = {}; }
-                result[diagnosis][year] =  element["Count"];
-            });
-            res.send(result);
+        let result = {};
+        rows.forEach(element => {
+            let year = element["YearOfBirth"];
+            let diagnosis = element["DiagnosisDescription"];
+            
+            if(result[diagnosis] === undefined) { result[diagnosis] = {}; }
+            result[diagnosis][year] =  element["Count"];
         });
+        res.send(result);
     });
 });
 
-app.get('/:table', function (req, res) {
-    client.connect(function (err) {
+app.get('/most-common-diseases-correlations', function (req, res) {
+    const query = `
+        WITH PATIENTDIAGNOSIS AS (
+            SELECT
+            DISTINCT 
+            T."PatientGuid" AS "Patient",
+            T."VisitYear" AS "VisitYear",
+            REPLACE_REGEXPR('(\\D*)(\\d*)\\.(.*)' IN UPPER(D."ICD9Code") WITH '\\1\\2') AS "ICD9Code"
+            FROM TRANSCRIPT T
+            JOIN TRANSCRIPTDIAGNOSIS TD ON TD."TranscriptGuid" = T."TranscriptGuid"
+            JOIN DIAGNOSIS D ON D."DiagnosisGuid" = TD."DiagnosisGuid"
+        ), CORRDIAGNOSIS AS (
+            SELECT TOP 10 
+            COUNT(PD1."Patient") AS "COUNT", /*PD1."VisitYear",*/ PD1."ICD9Code" AS CODE1, PD2."ICD9Code" AS CODE2
+            FROM PATIENTDIAGNOSIS PD1
+            JOIN PATIENTDIAGNOSIS PD2 ON PD1."Patient" = PD2."Patient" AND PD1."VisitYear" = PD2."VisitYear" AND PD1."ICD9Code" > PD2."ICD9Code"
+            GROUP BY PD1."ICD9Code", PD2."ICD9Code"/*, PD1."VisitYear"*/
+            ORDER BY "COUNT" DESC
+        )
+        SELECT "COUNT", C1."SHORT DESCRIPTION" AS DISEASE1, C2."SHORT DESCRIPTION" AS DISEASE2 FROM CORRDIAGNOSIS
+        LEFT JOIN ICD9CODES C1 ON C1."DIAGNOSIS CODE" = CORRDIAGNOSIS.CODE1 OR C1."DIAGNOSIS CODE" = CONCAT(CORRDIAGNOSIS.CODE1, '0') OR C1."DIAGNOSIS CODE" = CONCAT(CORRDIAGNOSIS.CODE1, '00')
+        LEFT JOIN ICD9CODES C2 ON C2."DIAGNOSIS CODE" = CORRDIAGNOSIS.CODE2 OR C2."DIAGNOSIS CODE" = CONCAT(CORRDIAGNOSIS.CODE2, '0') OR C2."DIAGNOSIS CODE" = CONCAT(CORRDIAGNOSIS.CODE2, '00')
+    `
+    client.exec(query, function (err, rows) {
         if (err) {
-            return console.error('Connect error', err);
+            res.status(500).send('Hana query failed ' + err);
+            return console.error('Execute error:', err);
         }
-        client.exec('select * from ' + req.params.table, function (err, rows) {
-            client.end();
-            if (err) {
-                return console.error('Execute error:', err);
-            }
-            res.send(rows);
-        });
+        res.send(rows);
     });
 });
 
-app.get('/:table/count', function (req, res) {
-    client.connect(function (err) {
+app.get('/table/:table', function (req, res) {
+    client.exec('select * from ' + req.params.table, function (err, rows) {
         if (err) {
-            return console.error('Connect error', err);
+            return console.error('Execute error:', err);
         }
-        client.exec('select count(*) as Count from ' + req.params.table, function (err, rows) {
-            client.end();
-            if (err) {
-                return console.error('Execute error:', err);
-            }
-            res.send(rows);
-        });
+        res.send(rows);
+    });
+});
+
+app.get('/count/:table', function (req, res) {
+    client.exec('select count(*) as Count from ' + req.params.table, function (err, rows) {
+        if (err) {
+            return console.error('Execute error:', err);
+        }
+        res.send(rows);
     });
 });
 

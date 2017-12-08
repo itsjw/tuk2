@@ -8,10 +8,10 @@ import {
   getLocationOrigin
 }                     from '../fetchTools';
 
-export const getMostCommonDiseasesByYearOfBirth = () => {
+export const queryEndpoint = (endpoint) => {
   const method  = getMethod.method;
   const headers = jsonHeader;
-  const url     = `http://localhost:3001/most-common-diseases-by-year-of-birth`;
+  const url     = `http://localhost:3001/${endpoint}`;
   const options = {...defaultOptions};
 
   return axios.request({

@@ -12,8 +12,18 @@ import {
   CardText
 }                         from 'material-ui/Card';
 import {
-  getMostCommonDiseasesByYearOfBirth
-}                         from '../../services/API/commonDiseases';
+  queryEndpoint
+}                         from '../../services/API/queryEndpoint';
+import {
+  Table,
+  TableBody,
+  TableFooter,
+  TableHeader,
+  TableHeaderColumn,
+  TableRow,
+  TableRowColumn,
+} from 'material-ui/Table';
+import './taskTwo.scss';
 
 var Highcharts = require('highcharts');
 require('highcharts/modules/exporting')(Highcharts);
@@ -36,11 +46,13 @@ require('highcharts/modules/exporting')(Highcharts);
     state = {
       animated: true,
       viewEnters: false,
+      corr: []
     };
   
     componentDidMount() {
       this.enterAnimationTimer = setTimeout(this.setViewEnters, 500);
       this.getData();
+      this.getDataCorr();
       
     }
   
@@ -49,7 +61,7 @@ require('highcharts/modules/exporting')(Highcharts);
     }
   
     getData() {
-      getMostCommonDiseasesByYearOfBirth()
+      queryEndpoint('most-common-diseases-by-year-of-birth')
         .then((resp) => {
           let series = Object.keys(resp.data).map((disease) => ({
             name: disease,
@@ -88,6 +100,15 @@ require('highcharts/modules/exporting')(Highcharts);
         });
     }
 
+    getDataCorr() {
+      queryEndpoint('most-common-diseases-correlations')
+      .then((resp)=> {
+        this.setState({corr: resp.data});
+        console.log(resp.data);
+      });
+    };
+
+
     render() {
       const { animated, viewEnters } = this.state;
   
@@ -108,6 +129,31 @@ require('highcharts/modules/exporting')(Highcharts);
             />
             <CardText>
               <div id="highchart" className="highchart"></div>
+            </CardText>
+          </Card>
+          <Card style={{margin:20}}>
+            <CardTitle
+              title="10 Most Common Diseases Appearing together"
+            />
+            <CardText>
+                <Table height="300px">
+                  <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
+                    <TableRow>
+                      <TableHeaderColumn>Occurences</TableHeaderColumn>
+                      <TableHeaderColumn>Disease #1</TableHeaderColumn>
+                      <TableHeaderColumn>Disease #2</TableHeaderColumn>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody displayRowCheckbox={false}>
+                    {this.state.corr.map( (row, index) => (
+                      <TableRow key={index}>
+                        <TableRowColumn>{row.COUNT}</TableRowColumn>
+                        <TableRowColumn>{row.DISEASE1}</TableRowColumn>
+                        <TableRowColumn>{row.DISEASE2}</TableRowColumn>
+                      </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
             </CardText>
           </Card>
         </section>
