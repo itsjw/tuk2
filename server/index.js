@@ -5,12 +5,14 @@ const app = express();
 const client = require('./hanaClient');
 const kpiResource = require('./resources/kpiResource');
 const commonDiseasesResource = require('./resources/commonDiseaseResource');
+const patientVisitsResource = require('./resources/patientVisitsResource');
 
 app.use(cors());
 
 app.get('/KPI/:entity', kpiResource.getForEntity);
 app.get('/most-common-diseases-by-year-of-birth', commonDiseasesResource.getDiseasesByYearOfBirth);
 app.get('/most-common-diseases-correlations', commonDiseasesResource.getDiseasesCorrelation);
+app.get('/patient-visits', patientVisitsResource.getPatientVisitsData);
 
 app.get('/table/:table', function (req, res) {
     client.exec('select * from ' + req.params.table, function (err, rows) {
