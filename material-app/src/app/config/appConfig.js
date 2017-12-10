@@ -15,6 +15,7 @@ export const appConfig = {
       {id: 1, title: 'InteractiveMap', routeName: '/map/patients-count/all/all'},
       {id: 2, title: 'Most Common Diseases', routeName: '/task-two'},
       {id: 3, title: 'Average Patient Visits', routeName: '/patient-visits'},
+      {id: 4, title: 'Blood Pressure Regression', routeName: '/blood-pressure'},
     ]
   }
 };

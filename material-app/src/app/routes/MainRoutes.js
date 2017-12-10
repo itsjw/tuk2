@@ -12,6 +12,7 @@ import {
   InteractiveMap,
   TaskTwo,
   PatientVisits,
+  BloodPressure,
   PageNotFound
 } from '../views';
 
@@ -22,6 +23,7 @@ const Routes = () => {
       <Route path="/map/:entity/:year/:gender" component={InteractiveMap} />
       <Route path="/task-two" component={TaskTwo} />
       <Route path="/patient-visits" component={PatientVisits} />
+      <Route path="/blood-pressure" component={BloodPressure} />
       <Route component={PageNotFound} />
     </Switch>
   );
