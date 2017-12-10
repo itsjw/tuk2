@@ -9,7 +9,6 @@ import {
 } from 'react-router';
 import { App } from '../containers';
 import {
-  Home,
   InteractiveMap,
   TaskTwo,
   PatientVisits,
@@ -19,7 +18,7 @@ import {
 const Routes = () => {
   return (
     <Switch path="/" component={App} >
-      <Route exact path="/" component={Home} />
+      <Route exact path="/" component={InteractiveMap} />
       <Route path="/map/:entity/:year/:gender" component={InteractiveMap} />
       <Route path="/task-two" component={TaskTwo} />
       <Route path="/patient-visits" component={PatientVisits} />
