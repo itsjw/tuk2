@@ -2,18 +2,19 @@
 
 /* eslint no-process-env:0 */
 
-import React                    from 'react';
+import React from 'react';
 import {
   Route,
   Switch
-}                               from 'react-router';
-import { App }                  from '../containers';
+} from 'react-router';
+import { App } from '../containers';
 import {
   Home,
   InteractiveMap,
   TaskTwo,
+  PatientVisits,
   PageNotFound
-}                               from '../views';
+} from '../views';
 
 const Routes = () => {
   return (
@@ -21,6 +22,7 @@ const Routes = () => {
       <Route exact path="/" component={Home} />
       <Route path="/map/:entity/:year/:gender" component={InteractiveMap} />
       <Route path="/task-two" component={TaskTwo} />
+      <Route path="/patient-visits" component={PatientVisits} />
       <Route component={PageNotFound} />
     </Switch>
   );
