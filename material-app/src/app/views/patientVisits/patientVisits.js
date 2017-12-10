@@ -82,7 +82,7 @@ class PatientVisits extends PureComponent {
   generateChart(data, degree) {
     Highcharts.chart('patient-visits-chart', {
       title: 'Average Patient Visits',
-      xAxis: { title: 'Age', min: 10, max: 100 },
+      xAxis: { title: 'Age', min: 15, max: 95 },
       yAxis: { title: 'Avg Visits', min: 5, max: 20 },
       series: [
         {
