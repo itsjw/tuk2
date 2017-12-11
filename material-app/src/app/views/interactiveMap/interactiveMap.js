@@ -110,6 +110,7 @@ class InteractiveMap extends PureComponent {
                 <MenuItem value={'patients-relative'} primaryText="Patients per 1 Mio" />
                 <MenuItem value={'visits-relative'} primaryText="Visits per 1 Mio" />
                 <MenuItem value={'average-bmi'} primaryText="Average BMI" />
+                <MenuItem value={'smoker-relative'} primaryText="Share of Smokers" />
               </DropDownMenu>
             </ToolbarGroup>
             <ToolbarGroup>
