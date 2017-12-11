@@ -4,7 +4,12 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Setup
 
-1. Run `./install.sh` to install the dependencies of the `server` and `material-app` packages.
-2. In the `material-app` package, run `npm start` to run the server and frontend dev-server.
-3. To run the frontend and server separately, run `npm start` in the `server` package and `npm run start-hotreload` in the `material-app` package.
+1. Clone the repository `git clone git@github.com:friedow/tuk2.git`.
+1. Run `./install.sh` to install dependencies for the `server` and `material-app` packages.
+1. Inside the `material-app` directory, run `npm start` to start the frontend and backend server.
+1. Access the frontend via http://localhost:3000/.
+
+To start the frontend and backend server separately:
+1. Run `npm start` in the `server` directory.
+1. Run `npm run start-hotreload` in the `material-app` directory.
 
