@@ -32,6 +32,7 @@ import DataMaps           from '../../components/datamaps.js';
 import statesData         from '../../data/states-data';
 import createHistory      from 'history/createBrowserHistory';
 import {getKPI}           from '../../services/API/getKPI';
+import './InteractiveMap.scss';
 
 class InteractiveMap extends PureComponent {
   static propTypes = {

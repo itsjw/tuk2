@@ -52,8 +52,7 @@ require('highcharts/modules/exporting')(Highcharts);
     componentDidMount() {
       this.enterAnimationTimer = setTimeout(this.setViewEnters, 500);
       this.getData();
-      this.getDataCorr();
-      
+      this.getDataCorr();      
     }
   
     componentWillUnmount() {
