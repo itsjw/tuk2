@@ -12,6 +12,7 @@ app.use(cors());
 app.get('/KPI/:entity', kpiResource.getForEntity);
 app.get('/most-common-diseases-by-year-of-birth', commonDiseasesResource.getDiseasesByYearOfBirth);
 app.get('/most-common-diseases-correlations', commonDiseasesResource.getDiseasesCorrelation);
+app.get('/most-common-diseases-correlations-per-range', commonDiseasesResource.getDiseasesCorrelationPerRange);
 app.get('/patient-visits', patientVisitsResource.getPatientVisitsData);
 
 app.get('/table/:table', function (req, res) {

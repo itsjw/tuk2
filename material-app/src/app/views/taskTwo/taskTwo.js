@@ -46,13 +46,15 @@ require('highcharts/modules/exporting')(Highcharts);
     state = {
       animated: true,
       viewEnters: false,
-      corr: []
+      corr: [],
+      corrRange: []
     };
   
     componentDidMount() {
       this.enterAnimationTimer = setTimeout(this.setViewEnters, 500);
       this.getData();
       this.getDataCorr();      
+      this.getDataCorrRange();  
     }
   
     componentWillUnmount() {
@@ -79,7 +81,7 @@ require('highcharts/modules/exporting')(Highcharts);
                 type: 'line',
             },
             title: {
-                text: 'Most Common Diseases by Year of Birth'
+                text: 'Most Common Diseases by Age Group'
             },
             xAxis: {
                 categories: categories
@@ -107,6 +109,13 @@ require('highcharts/modules/exporting')(Highcharts);
       });
     };
 
+    getDataCorrRange() {
+      queryEndpoint('most-common-diseases-correlations-per-range')
+      .then((resp)=> {
+        this.setState({corrRange: resp.data});
+        console.log(resp.data);
+      });
+    };
 
     render() {
       const { animated, viewEnters } = this.state;
@@ -155,6 +164,33 @@ require('highcharts/modules/exporting')(Highcharts);
                 </Table>
             </CardText>
           </Card>
+
+          <Card style={{margin:20}}>
+            <CardTitle
+              title="Most Common Diseases Appearing together per ICD9 Code Range"
+            />
+            <CardText>
+                <Table height="300px">
+                  <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
+                    <TableRow>
+                      <TableHeaderColumn>ICD9 Code Range</TableHeaderColumn>
+                      <TableHeaderColumn>Disease #1</TableHeaderColumn>
+                      <TableHeaderColumn>Disease #2</TableHeaderColumn>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody displayRowCheckbox={false}>
+                    {this.state.corrRange.map( (row, index) => (
+                      <TableRow key={index}>
+                        <TableRowColumn>{row.ICD9RANGE}</TableRowColumn>
+                        <TableRowColumn>{row.DISEASE1}</TableRowColumn>
+                        <TableRowColumn>{row.DISEASE2}</TableRowColumn>
+                      </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+            </CardText>
+          </Card>
+
         </section>
       );
     }
