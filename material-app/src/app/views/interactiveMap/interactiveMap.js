@@ -20,9 +20,9 @@ import DropDownMenu       from 'material-ui/DropDownMenu';
 import RaisedButton       from 'material-ui/RaisedButton';
 import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-more';
 import {
-  Toolbar, 
-  ToolbarGroup, 
-  ToolbarSeparator, 
+  Toolbar,
+  ToolbarGroup,
+  ToolbarSeparator,
   ToolbarTitle}           from 'material-ui/Toolbar';
 import IconMenu from 'material-ui/IconMenu';
 import IconButton from 'material-ui/IconButton';
@@ -32,7 +32,7 @@ import DataMaps           from '../../components/datamaps.js';
 import statesData         from '../../data/states-data';
 import createHistory      from 'history/createBrowserHistory';
 import {getKPI}           from '../../services/API/getKPI';
-import './InteractiveMap.scss';
+import './interactiveMap.scss';
 
 class InteractiveMap extends PureComponent {
   static propTypes = {
@@ -117,9 +117,9 @@ class InteractiveMap extends PureComponent {
               <ToolbarTitle text="Filter" />
               <TextField
                   hintText="Year"
-                  type="number" 
+                  type="number"
                   value={this.state.year}
-                  onChange={this.setYear.bind(this)}                       
+                  onChange={this.setYear.bind(this)}
               />
               <DropDownMenu
                   value={this.state.gender}
